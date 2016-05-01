@@ -13,40 +13,32 @@ initLi(C, L, [X|Q]) :- X is (((2*C)+L) mod 3) +1,
 /*Prédicat Initia UI*/					
 initBoard(L) :- init(6,6,L).
 
-/*Afficher le tableau*/
+/*Afficher le tableau
 
- affiche(_,0,1,_) :- !.
- affiche(C, L,1,[X|Q]) :- 
-					afficheLi(C, L,1,X),
+affichage 1*/
+
+ affiche1(_,0,_) :- !.
+ affiche1(C, L,[X|Q]) :- 
+					afficheLi1(C, L,X),
 					nl,
 					Temp is L-1,
-					affiche(C,Temp,1,Q).
+					affiche1(C,Temp,Q).
 					
-afficheLi(0, _, 1, _) :- !.
-afficheLi(C, L,1,[X|Q]) :- 
+afficheLi1(0, _, _) :- !.
+afficheLi1(C, L,[X|Q]) :- 
 					write(X),
 					write(` `),
 					Temp is C-1,
-					afficheLi(Temp, L, 1, Q).
-/*affichage 3*/
- affiche(_,0,3,_) :- !.
- affiche(C, L,3,[X|Q]) :- 
-					Temp is L-1,
-					affiche(C,Temp,3,Q),
-					afficheLi(C, L,3,X),
-					nl.
+					afficheLi1(Temp, L, Q).
 					
-afficheLi(0, _, 3, _) :- !.
-afficheLi(C, L, 3,[X|Q]) :- 
-					Temp is C-1,
-					afficheLi(Temp, L, 3, Q),
-					write(X),
-					write(` `).
+affiche3(_,0,_) :- !.
 
 					
 					
-/* affichage 2 
- affiche(C, L, [X|Q], 2) :- afficheLi(C, L, X, 2),
+/*affichage 2*/
+ 
+ affiche(C, L, [X|Q], 2) :- 
+					afficheLi(C, L, X, 2),
 					nl,
 					Temp is L-1,
 					affiche(C, Temp, Q, 2).
@@ -56,12 +48,33 @@ afficheLi(C, L, [X|Q], 2) :-
 					afficheLi(Temp, L, Q, 2),
 					write(X),
 					write(` `).
-					
 
- Prédicat Afficha UI*/
+/*affichage 3*/
+
+affiche3(C,L,[X|Q]) :- 
+					Temp is L-1,
+					affiche3(C,Temp,Q),
+					afficheLi3(C, Temp,X),
+					nl.
+					
+afficheLi3(0, _, _) :- !.
+afficheLi3(C, L,[X|Q]) :- 
+					Temp is C-1,
+					afficheLi3(Temp, L, Q),
+					write(X),
+					write(` `).
+
+/*Choix de position*/
+					
+position(R, L, 1) :- affiche1(6,6,L), !.
+position(R, L, 2) :- affiche2(6,6,L), !.
+position(R, L, 3) :- affiche3(6,6,L), !.
+position(R, L, 4) :- affiche4(6,6,L), !.
+					
+/*Prédicat Afficha UI*/
 
 afficheBoard(L) :- 	initBoard(L),
-					affiche(6,6,1,L),
+					affiche1(6,6,L),
 					nl,
 					write('Choisir une position : 1,2,3,4'),
 					nl,
@@ -72,8 +85,7 @@ afficheBoard(L) :- 	initBoard(L),
 					write('---1---'),
 					nl,
 					read(P), 
-					affiche(6,6,P,L),
-					!.
+					position(R, L, P).
 					
 					
 					
