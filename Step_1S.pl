@@ -177,7 +177,8 @@ afficheBoard(Board):-
 					write('Sbire = SRi et Kalista = KaRi'),nl,
 					insertPiece(Board,6,1).
 					
-					
+		
+		
 /*	
 
  4
