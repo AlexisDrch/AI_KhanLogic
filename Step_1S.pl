@@ -143,38 +143,38 @@ choixPosition(Temp,0,P,Board):-
 majCoups(Ns,Nk,0):-Temp is (Nk-1), Nk is Temp.
 majCoups(Ns,Nk,1):-Temp is (Ns-1), Ns is Temp.
 
-majPlacement(Board, C, L):- !.
+majPlacement(Board, C, L):- true.
 
 choixPlaces(Board):- !.
 					
 insertPiece(Board,0,0):- write('Placement terminé.'), nl, write('A vous de jouer !').
 /*Ns : nbre de sbire restant à positionner, Nk nombre de Kalista.*/
 insertPiece(Board,Ns, Nk):-
-					write ('Il vous reste ' ), write(Ns), write('/6 sbires et '), write(Nk), write('/1 Kalista à placer ... '),nl,
+					write("Il vous reste"), write(Ns), write(' /6 sbires et '), write(Nk), write(' /1 Kalista à placer ... '),nl,
 					choixPlaces(Board),
 					write('Placement de Sbire (1) ou Kalista (0)'), read(Pi),nl,
 					majCoups(Ns,Nk,Pi),
-					write ('Colonne choisie  [1..6] : '), read(C),nl,
-					write ('Colonne choisie  [1 ou 2 ] : '), read(L),nl,
+					write('Colonne choisie  [1..6] : '), read(C),nl,
+					write('Colonne choisie  [1 ou 2 ] : '), read(L),nl,
 					majPlacement(Board,C,L),
-					affiche1(6,6,Board), 
+					affiche1(6,6,Board).
 					
 					
 		
 					
 /*Prédicat UI*/
 
-afficheBoard(Board) :- 
+afficheBoard(Board):- 
 					t1(Temp),
 					nl,
 					affiche1(6,6,Temp),
 					tab(3),
 					write('----YOU----'), nl, nl,
-					choixPosition(Temp,0,_,Board).	
+					choixPosition(Temp,0,_,Board),
 					write('Insertion des pièces  : '), nl,tab(3),
 					write('Vous êtes le joueur : '), 
 					write('Rouge.'),nl,tab(3),
-					write('Sbire = SRi et Kalista = KaRi'),nl,
+					tab(3),write('(Sbire = SRi et Kalista = KaRi'),nl,
 					insertPiece(Board,6,1).
 					
 					
