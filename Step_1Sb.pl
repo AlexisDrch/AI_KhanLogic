@@ -1,9 +1,9 @@
 /*Variable tableau*/
 tabtemp([[2,3,1,2,2,3],[2,1,3,1,3,1],[1,3,2,3,1,2],[3,1,2,1,3,2],[2,3,1,3,1,3],[2,1,3,2,2,1]]).
-t1([[[2],[3],[1],[2],[2],[3]],[[2],[1],[3],[1],[3],[1]],[[1],[3],[2],[3],[1],[2]],[[3],[1],[2],[1],[3],[2]],[[2],[3],[1],[3],[1],[3]],[[2],[1],[3],[2],[2],[1]]]).
-t2([[[3],[1],[2],[2],[3],[1]],[[2],[3],[1],[3],[1],[2]],[[2],[1],[3],[1],[3],[2]],[[1],[3],[2],[2],[1],[3]],[[3],[1],[3],[1],[3],[1]],[[2],[2],[1],[3],[2],[2]]]).
-t3([[[2],[2],[3],[1],[2],[2]],[[1],[3],[1],[3],[1],[3]],[[3],[1],[2],[2],[3],[1]],[[2],[3],[1],[3],[1],[2]],[[2],[1],[3],[1],[3],[2]],[[1],[3],[2],[2],[1],[3]]]).
-t4([[[1],[2],[2],[3],[1],[2]],[[3],[1],[3],[1],[3],[2]],[[2],[3],[1],[2],[1],[3]],[[2],[1],[3],[2],[3],[1]],[[1],[3],[1],[3],[1],[2]],[[3],[2],[2],[1],[3],[2]]]).
+t1([[['____',2],['____',3],['____',1],['____',2],['____',2],['____',3]],[['____',2],['____',1],['____',3],['____',1],['____',3],['____',1]],[['____',1],['____',3],['____',2],['____',3],['____',1],['____',2]],[['____',3],['____',1],['____',2],['____',1],['____',3],['____',2]],[['____',2],['____',3],['____',1],['____',3],['____',1],['____',3]],[['____',2],['____',1],['____',3],['____',2],['____',2],['____',1]]]).
+t2([[['____',3],['____',1],['____',2],['____',2],['____',3],['____',1]],[['____',2],['____',3],['____',1],['____',3],['____',1],['____',2]],[['____',2],['____',1],['____',3],['____',1],['____',3],['____',2]],[['____',1],['____',3],['____',2],['____',2],['____',1],['____',3]],[['____',3],['____',1],['____',3],['____',1],['____',3],['____',1]],[['____',2],['____',2],['____',1],['____',3],['____',2],['____',2]]]).
+t3([[['____',2],['____',2],['____',3],['____',1],['____',2],['____',2]],[['____',1],['____',3],['____',1],['____',3],['____',1],['____',3]],[['____',3],['____',1],['____',2],['____',2],['____',3],['____',1]],[['____',2],['____',3],['____',1],['____',3],['____',1],['____',2]],[['____',2],['____',1],['____',3],['____',1],['____',3],['____',2]],[['____',1],['____',3],['____',2],['____',2],['____',1],['____',3]]]).
+t4([[['____',1],['____',2],['____',2],['____',3],['____',1],['____',2]],[['____',3],['____',1],['____',3],['____',1],['____',3],['____',2]],[['____',2],['____',3],['____',1],['____',2],['____',1],['____',3]],[['____',2],['____',1],['____',3],['____',2],['____',3],['____',1]],[['____',1],['____',3],['____',1],['____',3],['____',1],['____',2]],[['____',3],['____',2],['____',2],['____',1],['____',3],['____',2]]]).
 
 /*ETAPE 1
 Initialiser le tableau*/
@@ -142,12 +142,24 @@ choixPosition(Temp,0,P,Board):-
 					
 /*Insertion des pièces par le joueur Humain*/
 
-majCoups(Board,Ns,Nk, 'ka'):-Temp is (Nk-1), majPlacement(Board,Ns,Temp).
-majCoups(Board,Ns,Nk,'sbi'):-Temp is (Ns-1), majPlacement(Board, Temp, Nk).
+majCoups(Board,Ns,Nk, 'kalR'):-Temp is (Nk-1), majPlacement(Board,Ns,Temp,Res).
+majCoups(Board,Ns,Nk,'sbiR'):-Temp is (Ns-1), majPlacement(Board, Temp, Nk,Res).
 
-  
+/*Verif choix valide*/
+verifC(C,C) :- C>2, C<7, true, ! .     
+verifC(C,C2) :-  write('---ERROR Colonne entre 1 et 6'),nl,write('Colonne choisie  [1..6] ? '), read(C2),nl,verifC(C2,C3).
+verifL(L,L) :- L>2, L<7, true, !.
+verifL(L,L2) :- write('---ERROR Ligne entre 5 et 6'),nl,write('Ligne choisie  [5 ou 6] ? '), read(L2),nl,verifL(L2,L3).
 
-insertPiece3([T|Q], Piece, [Piece|T]) :- !.
+verifPiName('kalR',Pi2) :- true,!. 
+verifPiName('sbiR',Pi2) :- true,!. 
+verifPiName(Pi,Pi2) :- write('---ERROR '),write(Pi), write(' n est pas un nom autorise.'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3). 
+
+verifPi('kalR',Ns,0,Pi2) :- write('---ERROR Vous n avez plus de kalista disponible'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3),nl,verifPi(Pi2,Ns,0,Pi3),!.     
+verifPi('sbiR',0,Nk,Pi2) :- write('---ERROR Vous n avez plus de sbires disponible'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3),nl,verifPi(Pi2,0,Nk,Pi3),!.     
+verifPi(Pi,Ns,Nk,Pi2) :- true.
+
+insertPiece3([T|Q], Piece, [Piece|Q]) :- !.
 
 insertPiece2(1, Piece , [T2|Q2], [Res|Q2]):- insertPiece3(T2, Piece, Res) , !.		
 insertPiece2(C, Piece, [T2|Q2], [T2|Res]):-
@@ -163,18 +175,18 @@ insertPiece(C, L , Piece, [ T1| Q1] , [T1|Res]) :-
 majPlacement(Board,0,0,Board):- write('---Placement terminé.'), nl, nl, nl, write('---La partie commence !').
 majPlacement(Board,Ns, Nk,Res):-
 					write('---Il vous reste '), write(Ns), write(' /5 sbires et '), write(Nk), write(' /1 Kalista a placer ... '),nl,
-					write('---Placement de Sbire (sbiR) ou de Kalista (kaR) ?'), read(Pi),nl,
-					write('Colonne choisie  [1..6] ? '), read(C),nl,
-					write('Ligne choisie  [5 ou 6 ] ?'), read(L),nl, nl, nl, 
-					insertPiece(C,L,Pi,Board,Res),
+					write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi),nl,verifPiName(Pi,Pi2),nl,verifPi(Pi2,Ns,Nk,Pi3),nl,
+					write('Colonne choisie  [1..6] ? '), read(C),nl,verifC(C,C2),
+					write('Ligne choisie  [5 ou 6 ] ?'), read(L),nl,verifL(L,L2),nl, nl,
+					insertPiece(C2,L2,Pi3,Board,Res),
 					affiche1(6,6,Res),nl,nl,nl,
-					majCoups(Res,Ns,Nk,Pi).
+					majCoups(Res,Ns,Nk,Pi3).
 					
 
 majPlacementComput(Board,Res) :-
 					insertPiece(2,1,'sbiO',Board,Res1),
 					insertPiece(3,1,'sbiO',Res1,Res2),
-					insertPiece(4,1,'kaO',Res2,Res3),
+					insertPiece(4,1,'kalO',Res2,Res3),
 					insertPiece(5,1,'sbiO',Res3,Res4),
 					insertPiece(3,2,'sbiO',Res4,Res5),
 					insertPiece(4,2,'sbiO',Res5,Res).
@@ -193,9 +205,8 @@ afficheBoard(Board):-
 					majPlacementComput(Temp1,Temp2),
 					affiche1(6,6,Temp2),nl, nl,
 					write('---Joueur ocre (ordinateur) à placé ses pièces.'),write(' A vous :'),nl,
-					write('---Insertion des pièces ...   '), nl,nl,tab(3),
-					write('---Vous êtes le joueur : '), 
-					write('Rouge.'),nl,
+					write('---Insertion des pièces ...   '), nl,nl,
+					write('Vous êtes le joueur : '), write('Rouge.'),nl,nl,
 					majPlacement(Temp2,5,1,Board),
 					write('--- A vous de jouer :'),
 					write('Colonne choisie  [1..6] ? '), read(C),nl,
