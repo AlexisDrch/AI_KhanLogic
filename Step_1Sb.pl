@@ -151,13 +151,13 @@ verifC(C,C2) :-  write('---ERROR Colonne entre 1 et 6'),nl,write('Colonne choisi
 verifL(L,L) :- L>2, L<7, true, !.
 verifL(L,L2) :- write('---ERROR Ligne entre 5 et 6'),nl,write('Ligne choisie  [5 ou 6] ? '), read(L2),nl,verifL(L2,L3).
 
-verifPiName('kalR',Pi2) :- true,!. 
-verifPiName('sbiR',Pi2) :- true,!. 
+verifPiName('kalR','kalR') :- true,!. 
+verifPiName('sbiR','sbiR') :- true,!. 
 verifPiName(Pi,Pi2) :- write('---ERROR '),write(Pi), write(' n est pas un nom autorise.'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3). 
 
-verifPi('kalR',Ns,0,Pi2) :- write('---ERROR Vous n avez plus de kalista disponible'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3),nl,verifPi(Pi2,Ns,0,Pi3),!.     
-verifPi('sbiR',0,Nk,Pi2) :- write('---ERROR Vous n avez plus de sbires disponible'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3),nl,verifPi(Pi2,0,Nk,Pi3),!.     
-verifPi(Pi,Ns,Nk,Pi2) :- true.
+verifPi('kalR',Ns,0,Pi2) :- write('---ERROR Vous n avez plus de kalista disponible'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3),nl,verifPi(Pi3,Ns,0,Pi4),!.     
+verifPi('sbiR',0,Nk,Pi2) :- write('---ERROR Vous n avez plus de sbires disponible'),nl,write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi2),nl,verifPiName(Pi2,Pi3),nl,verifPi(Pi3,0,Nk,Pi4),!.     
+verifPi(Pi,Ns,Nk,Pi) :- true.
 
 insertPiece3([T|Q], Piece, [Piece|Q]) :- !.
 
@@ -171,6 +171,21 @@ insertPiece(C, L , Piece, [ T1| Q1] , [T1|Res]) :-
 					TempLi is L-1,
 					insertPiece(C, TempLi,Piece, Q1, Res ).
 
+
+teteCase3([T|Q], T):-!.
+					
+teteCase2([T|Q], 1, Res):- teteCase3(T, Res).
+teteCase2([T|Q], C, Res) :-
+					Temp is C-1,
+					teteCase2(Q,Temp, Res).
+					
+teteCase([T|Q],C,1,Res) :- teteCase2(T,C,Res), !.
+
+teteCase([T|Q],C,L,Res) :-
+					Temp is L-1,
+					teteCase(Q, C, Temp, Res).
+					
+
 /*Ns : nbre de sbire restant à positionner, Nk nombre de Kalista.*/					
 majPlacement(Board,0,0,Board):- write('---Placement terminé.'), nl, nl, nl, write('---La partie commence !').
 majPlacement(Board,Ns, Nk,Res):-
@@ -178,7 +193,7 @@ majPlacement(Board,Ns, Nk,Res):-
 					write('---Placement de Sbire (sbiR) ou de Kalista (kalR) ?'), read(Pi),nl,verifPiName(Pi,Pi2),nl,verifPi(Pi2,Ns,Nk,Pi3),nl,
 					write('Colonne choisie  [1..6] ? '), read(C),nl,verifC(C,C2),
 					write('Ligne choisie  [5 ou 6 ] ?'), read(L),nl,verifL(L,L2),nl, nl,
-					insertPiece(C2,L2,Pi3,Board,Res),
+					insertPiece(C2,L2,Pi,Board,Res),
 					affiche1(6,6,Res),nl,nl,nl,
 					majCoups(Res,Ns,Nk,Pi3).
 					
@@ -191,6 +206,8 @@ majPlacementComput(Board,Res) :-
 					insertPiece(3,2,'sbiO',Res4,Res5),
 					insertPiece(4,2,'sbiO',Res5,Res).
 											
+
+						
 					
 /*Prédicat UI*/
 
@@ -204,6 +221,7 @@ afficheBoard(Board):-
 					choixPosition(Temp,0,_,Temp1),
 					majPlacementComput(Temp1,Temp2),
 					affiche1(6,6,Temp2),nl, nl,
+					teteCase(Temp2,2,1,Res),write(Res),
 					write('---Joueur ocre (ordinateur) à placé ses pièces.'),write(' A vous :'),nl,
 					write('---Insertion des pièces ...   '), nl,nl,
 					write('Vous êtes le joueur : '), write('Rouge.'),nl,nl,
@@ -212,21 +230,40 @@ afficheBoard(Board):-
 					write('Colonne choisie  [1..6] ? '), read(C),nl,
 					write('Ligne choisie  [1..6 ] ?'), read(L),nl, nl, nl.
 					
-possibleMoves(Board,Player,PossibleMoveList).
-/*
+/*possibleMoves(Board,'ocre',PossibleMoveList) :- 
+					parcour(listpionRou).
+possibleMoves(Board,'rouge',PossibleMoveList) :- .
+
+
 TODO :	
+
+Coups possibles : 
+	Pour tout les noeuds de la liste de Pion d'un joueur 
+		- numCase(C, L, nCase)
+		- move?(C, L, history, nCase, listMove)
+			- notMember(C, L, history),
+			- dispo(C-1, L, nCase, listMove), 
+			- dispo(C+1, L, nCase, listMove),
+			- dispo(C, L+1, nCase, listMove),
+			- dispo(C, L-1, nCase, listMove),
+			
+
+	dispo(C, L, nCase, listMove) :-  teteCase(C,L, Res), verifTete(Res), Temp is nCase-1 , move(C, L, nCase, [[C,L],listMove])
+		
+
+
 
 majPlacement :
 	+ Sauvegarde de la position de la pièce dans une liste correspondant à tous les pions d'un joueur donné : 
-		+ PionRou [ [C, L, Piece, NumCase] , [C, L, Piece, NumCase], [..], .... ]
+		+ PionRou [ [C, L, Piece, NumCase, [ ...  coup dispo ...]] , [C, L, Piece, NumCase], [..], .... ]
 		+ PionOcr [ [C, L, Piece, NumCase] , [C, L, Piece, NumCase], [..], .... ]
-
+	
 		
 +deletePiece :
 	+ Lors d'un coup joué, retire l'ancien pion de la liste de Pion puis ajoute le nouveau (nouvelle position).
 	+ Tableau est réinitialisé avec les deux listes de pions (plus simple que de parcourir le tableau ... retirer la piece ... et remettre une autre)
 	
-	
+
 
 
 [ [ KaR | 2 ], [ [ 1, 4], _ ] ]
