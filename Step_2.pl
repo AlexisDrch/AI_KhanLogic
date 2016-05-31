@@ -225,3 +225,111 @@ majPlacementComput(Board,Res, ListJoueurOcre) :-
 					insertPiece(4,2,'sbiO',Res5,Res), numCase(Res,4,2, N5), insertListeJoueur(4,2,'sbiO',N5, Tmp4, ListJoueurOcre), assertz(ocre(4,2)), assertz(pion(4,2)).
 
 
+					
+possibleMoves(_, ListJoueur, PossibleMoveList):-
+					derouler(ListJoueur, PossibleMoveList).
+
+
+/*Lance une recherche sur les 4 positions autour du pions considéré : possibilities retourne une liste composée de tous les moves possible* /					
+possibilities(1, C, L, H, M):- 
+					Cplus is C+1, Cmoins is C-1, Lplus is L+1, Lmoins is L-1,
+					tryMove(Cplus, L, H, M4), tryMove(Cmoins, L, H, M1), tryMove(C, Lplus, H, M2), tryMove(C, Lmoins, H, M3), 
+					append(M4,M1,Res), 
+					append(M2,M3, Res2), append(Res, Res2, M).
+
+possibilities(N, C, L, H, M):-
+					Tmp is N-1,
+					possibilities(Tmp, C, L, H, Res),
+					reload(Res, H, M).
+					
+/*Parcourt de list de pion du joueurs en questions*/
+derouler( [], [] ).
+derouler( [ ( C, L, _ , N, _ ) |Q], [ ( (C, L), M ) |Res] ):-
+					possibilities(N, C, L, [], M),
+					derouler(Q, Res).
+					
+			
+					
+/*Relance la recherche pour les nouveaux emplacements trouvés autour du pion X considéré en prenant comme historique X */					
+reload( [] , _, [] ).
+reload( [ (C,L)| Q ], H, M ):-
+					possibilities(1, C, L, [(C,L)|H], Res),
+					reload(Q, [], Tmp),
+					append(Tmp, Res, M).
+	
+/* Try Move renvoie une liste si le move est possible et une liste vide sinon : Cela permet de ne pas arreter la recherche si fail*/
+tryMove( C, L, H, [ (C, L) ]):-
+					C>0, 
+					C<7,
+					L>0,
+					L<7,
+					\+pion(C,L),
+					\+element((C,L) , H),!.
+
+
+tryMove( C, L, _, []).
+					
+element( X, [X|Q]).
+element( X, [T|Q]):- elemen(X, Q).
+
+					
+
+/*				
+Prédicat UI*/
+
+
+afficheBoard(Board):- 
+					tabtemp(Temp),
+					nl,
+					affiche1(6,6,Temp),
+					tab(3),
+					write('-----------YOU----------- '), nl, nl,
+					choixPosition(Temp,0,_,Temp1),
+					majPlacementComput(Temp1,Temp2, ListJoueurOcre),nl, write(ListJoueurOcre),nl,
+					affiche1(6,6,Temp2),nl, nl,possibleMoves(Tmp2, ListJoueurOcre, PossibleMoveList),write(PossibleMoveList),
+					write('---Joueur ocre (ordinateur) à placé ses pièces.'),write(' A vous :'),nl,
+					write('---Insertion des pièces ...   '), nl,nl,
+					write('Vous êtes le joueur : '), write('Rouge.'),nl,nl,
+					majPlacement(Temp2,5,1,Board, Temp3, ListJoueurRouge),
+					affiche1(6,6,Board),
+					write('--- A vous de jouer :'),nl,nl,
+					write('Colonne choisie  [1..6] ? '), read(C),nl,
+					write('Ligne choisie  [1..6 ] ?'), read(L),nl, nl, nl.
+/*
+
+TODO :	
+
+Coups possibles : 
+	Pour tout les noeuds de la liste de Pion d'un joueur 
+		- numCase(C, L, nCase)
+		- move?(C, L, history, nCase, listMove)
+			- notMember(C, L, history),
+			- dispo(C-1, L, nCase, listMove), 
+			- dispo(C+1, L, nCase, listMove),
+			- dispo(C, L+1, nCase, listMove),
+			- dispo(C, L-1, nCase, listMove),
+			
+
+	dispo(C, L, nCase, listMove) :-  teteCase(C,L, Res), verifTete(Res), Temp is nCase-1 , move(C, L, nCase, [[C,L],listMove])
+		
+
+
+
+majPlacement :
+	+ Sauvegarde de la position de la pièce dans une liste correspondant à tous les pions d'un joueur donné : 
+		+ PionRou [ [C, L, Piece, NumCase, [ ...  coup dispo ...]] , [C, L, Piece, NumCase], [..], .... ]
+		+ PionOcr [ [C, L, Piece, NumCase] , [C, L, Piece, NumCase], [..], .... ]
+	
+		
++deletePiece :
+	+ Lors d'un coup joué, retire l'ancien pion de la liste de Pion puis ajoute le nouveau (nouvelle position).
+	+ Tableau est réinitialisé avec les deux listes de pions (plus simple que de parcourir le tableau ... retirer la piece ... et remettre une autre)
+	
+
+
+
+[ [ KaR | 2 ], [ [ 1, 4], _ ] ]
+[ [ sbiR | 2 ], [ [ 2, 4], _ ] ] 
+[ [ sbiR | 1 ], [ [ 2, 4], _ ] ] 
+
+*/
