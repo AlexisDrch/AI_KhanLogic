@@ -250,86 +250,52 @@ possibleMoves(_, ListJoueur, PossibleMoveList):-
 /*Parcourt de list de pion du joueurs en questions*/
 derouler( [], [] ).
 derouler( [ ( C, L, _ , N, _ ) |Q], [ ( (C, L), M ) |Res] ):-
-					asserta(history([])),
-					asserta(tailleCase(N)),
-					asserta(move(N)),
-					asserta(debut(1)),
 					asserta(joueurActuel('rouge')), /* A faire via une variable plutot */
-					possibilities(N, C, L, M1),
+					asserta(tailleCase(N)),					
+					possibilities(1,C,L,[(C,L)],M1),
 					retire_doublons(M1,M),
-					derouler(Q, Res),
-					retractall(move(_)),
 					retractall(tailleCase(_)),
-					retractall(history(_)).
-					
+					retractall(history(_)),
+					derouler(Q, Res).
+
 					
 /*Lance une recherche sur les 4 positions autour du pions considéré : possibilities retourne une liste composée de tous les moves possible*/			
-possibilities(1, C, L, M):- 
-					history(H),
-					Cplus is C+1, Cmoins is C-1, Lplus is L+1, Lmoins is L-1,
-					tryMove(Cplus, L, H, M4), tryMove(Cmoins, L, H, M1), tryMove(C, Lplus, H, M2), tryMove(C, Lmoins, H, M3), 
+possibilities(N, C, L, H, M):- 
+					tailleCase(N),
+					joueurActuel(J),
+					Cplus is C+1, Cmoins is C-1, Lplus is L+1, Lmoins is L-1,				
+					tryMoveLast(J,Cplus, L, H, M4), 
+					tryMoveLast(J,Cmoins, L, H, M1), 
+					tryMoveLast(J,C, Lplus, H, M2), 
+					tryMoveLast(J,C, Lmoins, H, M3), 
 					append(M4,M1,Res), 
 					append(M2,M3, Res2), 
 					append(Res, Res2, M).			
 
-
-/*1er appelé*/
-possibilities(N, C, L, M):-
-					debut(1),
-					retractall(debut(_)),
-					Tmp is N-1,
-					possibilities(Tmp, C, L, Res),
-					reloadLast((C,L),Res,M).
-					
-/*Pendant les coups intermediaires*/
-possibilities(N, C, L, M):-
-					Tmp is N-1,
-					move(Move),
-					possibilities(Tmp, C, L, Res),
-					retractall(move(_)),
-					MovePlus is Move +1,
-					asserta(move(MovePlus)),
-					reload((C,L), Res,M).
-	
-
-					
-possibilitiesLast(J,1, C, L, M):-!,
-					history(H),!,
+/* cas où le move doit être relancé, sera fait dans try move*/
+possibilities(N, C, L, H, M):-
+					Nbis is N+1,
 					Cplus is C+1, Cmoins is C-1, Lplus is L+1, Lmoins is L-1,
-					tryMoveLast(J,Cplus, L, H, M4), tryMoveLast(J,Cmoins, L, H, M1), tryMoveLast(J,C, Lplus, H, M2), tryMoveLast(J,C, Lmoins, H, M3), 
+					tryMove(Nbis, Cplus, L, H, M4), 
+					tryMove(Nbis, Cmoins, L, H, M1), 
+					tryMove(Nbis, C, Lplus, H, M2), 
+					tryMove(Nbis, C, Lmoins, H, M3), 
 					append(M4,M1,Res), 
 					append(M2,M3, Res2), 
-					append(Res, Res2, M).
-					
-/*Relance la recherche pour les nouveaux emplacements trouvés autour du pion X considéré en prenant comme historique X */					
-reload( _, [] , [] ).
-reload( (C_old,L_old), [(C_new, L_new) |Q] , M ):-
-					asserta(history((C_old,L_old))),
-					possibilities(1, C_new, L_new, Res),
-					retract(history((C_old,L_old))),				
-					reload((C_old,L_old),Q,Tmp),
-					append(Tmp, Res, M).
-					
-/* Au dernier coup */
-reloadLast( _, [] , [] ).
-reloadLast( (C_old,L_old), [(C_new, L_new) |Q], M ):-
-					asserta(history((C_old,L_old))),
-					joueurActuel(J),
-					possibilitiesLast(J,1, C_new, L_new, Res),					
-					retract(history((C_old,L_old))),
-					reloadLast((C_old,L_old),Q,Tmp),
-					append(Tmp, Res, M).	
+					append(Res, Res2, M).			
+
 					
 /* Try Move renvoie une liste si le move est possible et une liste vide sinon : Cela permet de ne pas arreter la recherche si fail*/
-tryMove( C, L, H, [ (C, L) ]):-
+tryMove(N, C, L, H, M):-
 					C>0, 
 					C<7,
 					L>0,
 					L<7,
 					\+pion(C,L),
-					\+element((C,L) , H).
+					\+element((C,L) , H),
+					possibilities(N,C,L, [(C,L)|H], M).
 
-tryMove( C, L, _, []).
+tryMove(_, C, L, _, []).
 
 tryMoveLast('rouge', C, L, H, [ (C, L) ]):-
 					C>0, 
