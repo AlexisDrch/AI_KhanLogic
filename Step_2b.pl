@@ -201,16 +201,10 @@ numCase([T|Q],C,L,Res):-
 					Temp is L-1,
 					numCase(Q, C, Temp, Res).
 					
-/*Insere un element complexe */					
+					
 insertListeJoueur(C,L, Pi, N, [], [ (C,L,Pi,N,[]) | [] ] ):- !.				
 insertListeJoueur(C,L, Pi, N, List, [ (C, L, Pi, N, [] ) | List ] ):-!.	
-
-/*Retire un element complexe*/
-removeListeJoueur(C,L,[], []).
-removeListeJoueur(C,L,[(C,L,_,_,_)|Q],Q):-!.
-removeListeJoueur(C,L,[T|Q], [T|Res]):-
-					removeListeJoueur(C1,L1,Q,Res).
-			
+					
 
 /*Ns : nbre de sbire restant à positionner, Nk nombre de Kalista.*/					
 majPlacement(Board,0,0,Board, ListJoueurRouge, ListJoueurRouge):- write('---Placement terminé.'), nl, nl, nl, write('---La partie commence !'),nl,nl.
@@ -251,15 +245,9 @@ possibleMoves(_, ListJoueur, PossibleMoveList):-
 derouler( [], [] ).
 derouler( [ ( C, L, _ , N, _ ) |Q], [ ( (C, L), M ) |Res] ):-
 					asserta(history([])),
-					asserta(tailleCase(N)),
-					asserta(move(1)),
-					asserta(joueurActuel('rouge')), /* A faire via une variable plutot */
 					possibilities(N, C, L, M1),
 					retire_doublons(M1,M),
-					derouler(Q, Res),
-					retractall(move(_)),
-					retractall(tailleCase(_)),
-					retractall(history(_)).
+					derouler(Q, Res).
 					
 					
 /*Lance une recherche sur les 4 positions autour du pions considéré : possibilities retourne une liste composée de tous les moves possible*/			
@@ -269,34 +257,15 @@ possibilities(1, C, L, M):-
 					tryMove(Cplus, L, H, M4), tryMove(Cmoins, L, H, M1), tryMove(C, Lplus, H, M2), tryMove(C, Lmoins, H, M3), 
 					append(M4,M1,Res), 
 					append(M2,M3, Res2), 
-					append(Res, Res2, M).			
-					
-/*Pendant les coups intermediaires*/
-possibilities(N, C, L, M):-
-					move(Move),
-					tailleCase(TailleCase), 
-					Move \= TailleCase,
-					Tmp is N-1,
-					possibilities(Tmp, C, L, Res),
-					retractall(move(_)),
-					MovePlus is Move +1,
-					asserta(move(MovePlus)),
-					reload( Res,M).
-
-/*1er appelé*/
-possibilities(N, C, L, M):-
-					Tmp is N-1,
-					possibilities(Tmp, C, L, Res),
-					reloadLast(Res,M).		
-
-					
-possibilitiesLast(1, C, L, M):- 
-					history(H),
-					Cplus is C+1, Cmoins is C-1, Lplus is L+1, Lmoins is L-1,
-					tryMoveLast(Cplus, L, H, M4), tryMoveLast(Cmoins, L, H, M1), tryMoveLast(C, Lplus, H, M2), tryMoveLast(C, Lmoins, H, M3), 
-					append(M4,M1,Res), 
-					append(M2,M3, Res2), 
 					append(Res, Res2, M).
+
+possibilities(N, C, L, M):-
+					history(H),
+					Tmp is N-1,
+					possibilities(Tmp, C, L, Res),
+					reload( Res,M).
+					
+			
 					
 /*Relance la recherche pour les nouveaux emplacements trouvés autour du pion X considéré en prenant comme historique X */					
 reload(  [] , [] ).
@@ -306,16 +275,7 @@ reload([ (C,L)| Q ], M ):-
 					retract(history((C,L))),
 					reload(Q,Tmp),
 					append(Tmp, Res, M).
-					
-/* Au dernier coup */
-reloadLast(  [] , [] ).
-reloadLast([ (C,L)| Q ], M ):-
-					asserta(history((C,L))),
-					possibilitiesLast(1, C, L, Res),
-					retract(history((C,L))),
-					reload(Q,Tmp),
-					append(Tmp, Res, M).	
-					
+	
 /* Try Move renvoie une liste si le move est possible et une liste vide sinon : Cela permet de ne pas arreter la recherche si fail*/
 tryMove( C, L, H, [ (C, L) ]):-
 					C>0, 
@@ -325,29 +285,8 @@ tryMove( C, L, H, [ (C, L) ]):-
 					\+pion(C,L),
 					\+element((C,L) , H).
 
+
 tryMove( C, L, _, []).
-
-tryMoveLast( C, L, H, [ (C, L) ]):-
-					joueurActuel(J),
-					J is 'rouge',
-					C>0, 
-					C<7,
-					L>0,
-					L<7,
-					\+rouge(C,L),
-					\+element((C,L) , H).
-					
-tryMoveLast( C, L, H, [ (C, L) ]):-
-					joueurActuel(J),
-					J is 'ocre',
-					C>0, 
-					C<7,
-					L>0,
-					L<7,
-					\+ocre(C,L),
-					\+element((C,L) , H).
-
-tryMoveLast( C, L, _, []).
 					
 element( X, [X|Q]).
 element( X, [T|Q]):- element(X, Q).
@@ -361,11 +300,10 @@ retire_doublons([T|Q], [T|R]):-
 			retire_elements(T,Q,Res),
 			retire_doublons(Res,R).
 
-/*En fonction de l'etat du jeu : donne tous les pions disponible */
+/*En fonction de l'etat du jeu : donne tous les pions disponible et leurs possible New Mouvement*/
 donneChoix([], []).
 donneChoix( [ ((C,L), M) |Q], [ pion(C,L) |Res] ):- donneChoix(Q, Res).
 
-/*En fonction de l'état du jeu (fonction de PossibleMoveList) : donne tous les moves disponibles depuis le pion selectionnée*/
 donneChoixNew((_,_), [], []).
 donneChoixNew((C,L), [ ((C,L), M) |Q], M):-!.
 donneChoixNew((C,L), [ ((C1,L1), M) |Q], Res):- 
@@ -379,10 +317,8 @@ verifChoix(C,L, ChoixPosition, Cbis, Lbis):-
 			varPossibleMoveRouge(PossibleMoveList),
 			donneChoix(PossibleMoveList, ChoixPosition),
 			write(ChoixPosition), nl,nl,
-			write('#########################'),nl,
-			write('Votre choix (C,L)'),nl,	
-			write('C:- '), read(C2),nl, 
-			write('L:-  '), read(L2),nl, nl, verifChoix(C2,L2, ChoixPosition, Cbis, Lbis).
+			write('Colonne:- [1..6] ? '), read(C2),nl, 
+			write('Ligne:-  [1..6 ] ?'), read(L2),nl, nl, verifChoix(C2,L2, ChoixPosition, Cbis, Lbis).
 
 
 			
@@ -390,85 +326,40 @@ verifChoix(C,L, ChoixPosition, Cbis, Lbis):-
 gagner(0).
 
 
-boucleJeu:-jeu(1), !.
-jeu(1):- 
-	nl,nl,
-	write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'),nl,
-	write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%New shot%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'),nl,
-	write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'),nl,
-	nl,nl,
-	
+boucleJeu:-repeat, jeu, !.
+jeu:- 
 	/*On intialise avec le bon tableau*/
 	tableau(Board), 
 	/*On détruit l'ancien*/
 	retractall(tableau(_)),
 	/*On recupere les moves disponibles*/
 	varPossibleMoveRouge(PossibleMoveList),
+	write(PossibleMoveList),
 	/*On détruit les anciens*/
 	retractall(varPossibleMoveRouge(_)),
 	
-	write('#########################'),nl,
+	
 	write('--- A vous de jouer :'),nl,
-	write('#########################'),nl,nl,nl,
-	affiche1(6,6,Board),nl,nl,nl,
-	write('#########################'),nl,
-	write('--- Voici vos pions, choisissez :'),nl,
-	write('#########################'),nl,nl,
+	affiche1(6,6,Board),nl,nl,
+	nl, write('---Veuillez choisir un pion à déplacer:'),nl,
 	donneChoix(PossibleMoveList, ChoixPosition),
-	write('---> '),write(ChoixPosition), nl,nl,
-	write('#########################'),nl,
-	write('Votre choix (C,L)'),nl,
-	write('C:- '), read(C),
-	write('L:- '), read(L),nl, nl, verifChoix(C,L, ChoixPosition, Cbis, Lbis),
-	write('#########################'),nl,
-	write('--- Ses deplacements possibles, choisissez:'),nl,
-	write('#########################'),nl,nl,
+	write(ChoixPosition), nl,nl,
+	write('Colonne:-  [1..6] ? '), read(C),nl, 
+	write('Ligne:-  [1..6 ] ?'), read(L),nl, nl, 	verifChoix(C,L, ChoixPosition, Cbis, Lbis),
+	write('---Vous pouvez choisir parmis ces positions'),nl,nl,
 	donneChoixNew((C,L),PossibleMoveList, ChoixNewPositions),
-	write('---> '),write(ChoixNewPositions),nl,nl,
-	write('#########################'),nl,
-	write('Votre choix (C,L)'),nl,
-	write('C:- '),read(NewC),
-	write('L:- '),read(NewL),
-	maj('rouge', Cbis,Lbis,Board,NewC,NewL),
-	/* Mise à jour du tableau + liste Joueur perso 
-	A factoriser en prédicat commun pour les 2 joueurs */
+	write(ChoixNewPositions),
+	read(NewPosition),
+	
+	
+	/*On remet le nouveu tableu en var dynamique*/
+	asserta(tableau(Board)),
+	/*On remet les nouveau moove disponible en var dynamique : Attention : deja fait dans le predicat possibleMove */
+	asserta(varPossibleMoveRouge(PossibleMoveList)),
+	
+	gagner(jeu), jeu = 1, nl.
 
-jeu(1).
-
-
-/* Mise à jour du tableau + liste Joueur perso */
-maj('rouge',C_old,L_old,Board,C_new,L_new):-
-						insertPiece(C_old,L_old,'____',Board,Res1),
-						retract(rouge(C_old,L_old)), 								
-						retract(pion(C_old,L_old)), 									
-						insertPiece(C_new,L_new,'sbiR',Res1,Res2), 	/*insert new : get de Pieces ! -->sbiR est complement subjectif ici*/
-						numCase(Res2, C_new,L_new, N),  
-						/*Recuperation de l'ancienne liste du joueur */
-						listRouge(ListJoueur),
-						removeListeJoueur(C_old,L_old,ListJoueur,ListTemp),
-						/*Delete l'ancienne*/
-						retractall(listRouge(_)),
-						insertListeJoueur(C_new,L_new,'sbiR',N, ListTemp, NewListJoueur),
-						asserta(rouge(C_new,L_new)), 
-						assertz(pion(C_new,L_new)),
-						/*New liste joueur */
-						asserta(listRouge(NewListJoueur)),
-						write('NOUVEAU PLACEMENT ROUGE'),
-						write(NewListJoueur),
-						/*Fin mis à jour tableau + liste
-
-						On remet le nouveu tableau en var dynamique*/
-						asserta(tableau(Res2)),
-						possibleMoves(Res2, NewListJoueur, NewPossibleMoveList),
-						verifList(NewPossibleMoveList),
-						/*On remet les nouveau moove disponible en var dynamique*/
-						asserta(varPossibleMoveRouge(NewPossibleMoveList)).
-
-
-
-
-
-verifList(N):-true.
+	
 /*Prédicat UI*/
 					
 afficheBoard(Board):- 
@@ -478,13 +369,13 @@ afficheBoard(Board):-
 					tab(3),
 					write('-----------YOU----------- '), nl, nl,
 					choixPosition(Temp,0,_,Temp1),asserta(ocre([],[])), asserta(rouge([], [])),
-					majPlacementComput(Temp1,Temp2, ListJoueurOcre),nl,write('Placement du joueur Ocre : '), nl, asserta(listOcre(ListJoueurOcre)),write(ListJoueurOcre),nl,
+					majPlacementComput(Temp1,Temp2, ListJoueurOcre),nl,write('Placement du joueur Ocre : '), nl, write(ListJoueurOcre),nl,
 					affiche1(6,6,Temp2),nl, nl, 
 					write('---Joueur ocre (ordinateur) à placé ses pièces.'),write(' A vous :'),nl,
 					write('---Insertion des pièces ...   '), nl,nl,
 					write('Vous êtes le joueur : '), write('Rouge.'),nl,nl,
 					/*majPlacement(Temp2,5,1,Board, Temp3, ListJoueurRouge), sera utilise lors du vrai test*/
-					majPlacementHumain(Temp2, Board, ListJoueurRouge), write('Placement du joueur Rouge : '), nl, asserta(listRouge(ListJoueurRouge)), write(ListJoueurRouge),nl,
+					majPlacementHumain(Temp2, Board, ListJoueurRouge), write('Placement du joueur Rouge : '), nl, write(ListJoueurRouge),nl,
 					affiche1(6,6,Board), nl, nl,
 					/*On initialise tout en dynamique avant de lancer la boucle du jeu*/
 					asserta(tableau(Board)), 
